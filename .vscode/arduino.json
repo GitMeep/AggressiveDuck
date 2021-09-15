@@ -1,0 +1,6 @@
+{
+    "board": "arduino:avr:uno",
+    "port": "COM17",
+    "sketch": "AggressiveDuck.ino",
+    "programmer": "arduino:avrispmkii"
+}
