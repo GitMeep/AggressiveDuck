@@ -17,12 +17,12 @@ public:
     
     // If the drive button is held, look at the direction and choose the appropriate motor directions and speeds.
     if(control.drive) {
+      command.rightMotorDirection = true;
+          command.leftMotorDirection = true;
       switch(control.dir) {
         case Remote::FORWARDS:
-          command.rightMotorDirection = true;
-          command.leftMotorDirection = true;
-          command.leftMotorSpeed = map(control.speed, 0, 7, 0, 170/2);
-          command.rightMotorSpeed = map(control.speed, 0, 7, 0, 255/2);
+          command.leftMotorSpeed = map(control.speed, 0, 7, 0, 120);
+          command.rightMotorSpeed = map(control.speed, 0, 7, 0, 120);
           break;
         case Remote::BACKWARDS:
           command.rightMotorDirection = false;
@@ -31,15 +31,11 @@ public:
           command.rightMotorSpeed = 100;
           break;
         case Remote::LEFT:
-          command.rightMotorDirection = true;
-          command.leftMotorDirection = false;
           command.leftMotorSpeed = map(control.speed, 0, 7, 0, 80);
-          command.rightMotorSpeed = map(control.speed, 0, 7, 0, 170);
+          command.rightMotorSpeed = map(control.speed, 0, 7, 0, 160);
           break;
         case Remote::RIGHT:
-          command.rightMotorDirection = false;
-          command.leftMotorDirection = true;
-          command.leftMotorSpeed = map(control.speed, 0, 7, 0, 170);
+          command.leftMotorSpeed = map(control.speed, 0, 7, 0, 160);
           command.rightMotorSpeed = map(control.speed, 0, 7, 0, 80);
           break;
         default:

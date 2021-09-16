@@ -41,8 +41,8 @@ public:
     command.leftMotorDirection = true;
     command.rightMotorDirection = true;
     unsigned char forwardSpeed = 80;
-    unsigned char turnSpeed = 70;
-    unsigned char tightSpeed = 75;
+    unsigned char turnSpeed = 90;
+    unsigned char tightSpeed = 90;
     switch(this->turn) {
       case -2: // we need to turn sharply left
         command.rightMotorSpeed = tightSpeed;
@@ -50,15 +50,17 @@ public:
         command.leftMotorDirection = false;
         break;
       case -1: // we need to turn left
+        command.leftMotorDirection = false;
         command.rightMotorSpeed = turnSpeed;
-        command.leftMotorSpeed = 0;
+        command.leftMotorSpeed = turnSpeed/2;
         break;
       case -0: // we need to go straight
         command.rightMotorSpeed = forwardSpeed;
         command.leftMotorSpeed = forwardSpeed;
         break;
       case 1: // we need to turn right
-        command.rightMotorSpeed = 0;
+        command.rightMotorDirection = false;
+        command.rightMotorSpeed = turnSpeed/2;
         command.leftMotorSpeed = turnSpeed;
         break;
       case 2: // we need to turn sharply right

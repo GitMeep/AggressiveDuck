@@ -1,5 +1,5 @@
 // Uncomment if using the hardware serial to communicate with Bluetooth module. Unplug the modles TX and RX wires when programming the Arduino when using hardware serial.
-#define BT_HW_SERIAL
+//#define BT_HW_SERIAL
 
 #include "Remote.h"
 #include "LightSensor.h"
@@ -17,7 +17,7 @@ Controller* manual;
 Controller* autonomy;
 
 // Objects representing each sensor. Each one keeps track of what pin the sensor uses and has some filtering that smooths out the readings.
-LightSensor* sensor1;
+LightSensor* sensor7;
 LightSensor* sensor2;
 LightSensor* sensor3;
 LightSensor* sensor5;
@@ -41,25 +41,25 @@ void setup()
   #endif
 
   // Remote has a timeout of 500ms and uses TX: pin 7, RX: pin 6. (If not using hardware serial).
-  remote = new Remote(500, 7, 6);
+  remote = new Remote(500, 6, 7);
 
   // Each light sensor knows what pin it's connected to, what it's threshold between black and white is and how much the value is smoothed (lower is smoother).
-  sensor1 = new LightSensor(A3, 8, 0.1);
-  sensor2 = new LightSensor(A1, 700, 0.5);
-  sensor3 = new LightSensor(A0, 800, 0.5);
-  sensor5 = new LightSensor(A2, 650, 0.5);
+  sensor7 = new LightSensor(A3, 800, 0.2);
+  sensor2 = new LightSensor(A1, 800, 0.75);
+  sensor3 = new LightSensor(A0, 800, 0.75);
+  sensor5 = new LightSensor(A2, 650, 0.75);
   
   // Manual control gets the remote and the pin for firing the cannon. Autonomy gets pointers to all the sensors.
   manual = new ManualControl(remote, 10);
-  autonomy = new Autonomy(sensor2, sensor5, sensor3, sensor1);
+  autonomy = new Autonomy(sensor2, sensor5, sensor3, sensor7);
 
   // Motors get their A and B pins as well as the enable pin for PWM.
   leftMotor = new Motor(5, 4, 11);
   rightMotor = new Motor(2, 3, 9);
 
   // The timers get their target period and handler functions.
-  remoteTimer = new Timer(80, updateRemote);
-  navTimer = new Timer(30, updateNav);
+  remoteTimer = new Timer(40, updateRemote);
+  navTimer = new Timer(10, updateNav);
 }
 
 void loop() {
@@ -78,7 +78,7 @@ void updateNav() {
   Remote::State control = remote->getState();
 
   // Update all the sensor readings.
-  sensor1->update();
+  sensor7->update();
   sensor2->update();
   sensor3->update();
   sensor5->update();
@@ -97,6 +97,8 @@ void updateNav() {
   } else {
     command = autonomy->update();
   }
+
+  Serial.println(sensor7->getFilteredReading());
 
   // Apply the command to the motors.
   leftMotor->setDirection(command.leftMotorDirection);
