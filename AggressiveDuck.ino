@@ -1,5 +1,5 @@
 // Uncomment if using the hardware serial to communicate with Bluetooth module. Unplug the modles TX and RX wires when programming the Arduino when using hardware serial.
-//#define BT_HW_SERIAL
+#define BT_HW_SERIAL
 
 #include "Remote.h"
 #include "LightSensor.h"
@@ -78,7 +78,7 @@ void updateNav() {
   Remote::State control = remote->getState();
 
   // Update all the sensor readings.
-  sensor7->update();
+  //sensor7->update();
   sensor2->update();
   sensor3->update();
   sensor5->update();
@@ -97,8 +97,6 @@ void updateNav() {
   } else {
     command = autonomy->update();
   }
-
-  Serial.println(sensor7->getFilteredReading());
 
   // Apply the command to the motors.
   leftMotor->setDirection(command.leftMotorDirection);
