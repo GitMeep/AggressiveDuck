@@ -44,7 +44,7 @@ void setup()
   remote = new Remote(500, 6, 7);
 
   // Each light sensor knows what pin it's connected to, what it's threshold between black and white is and how much the value is smoothed (lower is smoother).
-  sensor7 = new LightSensor(A3, 800, 0.2);
+  sensor7 = new LightSensor(A3, 800, 0.1);
   sensor2 = new LightSensor(A1, 800, 0.75);
   sensor3 = new LightSensor(A0, 800, 0.75);
   sensor5 = new LightSensor(A2, 650, 0.75);
