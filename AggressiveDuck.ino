@@ -30,6 +30,8 @@ Motor* rightMotor;
 Timer* remoteTimer;
 Timer* navTimer;
 
+unsigned char firePin = 10;
+
 // Function prototypes for timer handlers.
 void updateRemote();
 void updateNav();
@@ -41,16 +43,16 @@ void setup()
   #endif
 
   // Remote has a timeout of 500ms and uses TX: pin 7, RX: pin 6. (If not using hardware serial).
-  remote = new Remote(500, 6, 7);
+  remote = new Remote(500, 7, 6);
 
   // Each light sensor knows what pin it's connected to, what it's threshold between black and white is and how much the value is smoothed (lower is smoother).
-  sensor7 = new LightSensor(A3, 800, 0.2);
-  sensor2 = new LightSensor(A1, 800, 0.75);
-  sensor3 = new LightSensor(A0, 800, 0.75);
-  sensor5 = new LightSensor(A2, 650, 0.75);
+  sensor7 = new LightSensor(A3, 900, 0.1);
+  sensor2 = new LightSensor(A1, 900, 0.75);
+  sensor3 = new LightSensor(A0, 900, 0.75);
+  sensor5 = new LightSensor(A2, 900, 0.75);
   
   // Manual control gets the remote and the pin for firing the cannon. Autonomy gets pointers to all the sensors.
-  manual = new ManualControl(remote, 10);
+  manual = new ManualControl(remote);
   autonomy = new Autonomy(sensor2, sensor5, sensor3, sensor7);
 
   // Motors get their A and B pins as well as the enable pin for PWM.
@@ -88,6 +90,13 @@ void updateNav() {
     leftMotor->setSpeed(0);
     rightMotor->setSpeed(0);
     return;
+  }
+
+  // If the fire button is held, DIVERT POWER TO CANNONS (there's only one).
+  if(control.fire) {
+    analogWrite(firePin, 80);
+  } else {
+    analogWrite(firePin, 0);
   }
 
   // Prepare a command and get it from either the manual controller or autonomous controller.
