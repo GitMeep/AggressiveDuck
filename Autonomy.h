@@ -54,51 +54,21 @@ private:
     } else if(!bottomReading) { // If the bottom sensor is also not seeing anything, go into search mode.
       if(!this->countingDown) {
         this->countingDown = true;
-        this->countdown = millis();
-      }
-      if(millis() - countdown > 1000) {
+        this->countdownStart = millis();
+      } else if(millis() - countdownStart > 1000) {
         this->searching = true;
+        this->searchState = 0;
+        this->countingDown = false;
+        command.leftMotorSpeed = 0;
+        command.rightMotorSpeed = 0;
         return command;
       }
     }
 
-    setTurn(command, this->turn, this->forwardSpeed, this->turnSpeed, this->tightSpeed);
-
-    return command;
-  }
-
-  // This function gets called each tick when the line has been determined to be lost
-  ControlCommand search(bool leftReading, bool middleReading, bool rightReading, bool bottomReading) {
-    ControlCommand command;
-
-    // If the bottom sensor finds the line again, turn on the spot until the middle sensor sees something
-    if(bottomReading) {
-      // If we are on the line again, check if the middle sensor is also on the line. If it is, stop searching, otherwise turn on the spot.
-      if(middleReading) {
-        this->searching = false;
-        return command;
-      }
-      command.leftMotorDirection = true;
-      command.rightMotorDirection = false;
-      command.leftMotorSpeed = 85;
-      command.rightMotorSpeed = 85;
-
-      return command;
-    }
-
-    // If we don't see the line on the bottom sensor, continue turning in the same direction, but in reverse
-    setTurn(command, this->turn, 70, 70, 70);
-    command.leftMotorDirection = !command.leftMotorDirection;
-    command.rightMotorDirection = !command.rightMotorDirection;
-
-    return command;
-  }
-
-  void setTurn(ControlCommand& command, char turn, unsigned char forwardSpeed, unsigned char turnSpeed, unsigned char tightSpeed) {
     // This code updates the motor speeds and directions depending on the decided degree of turning.
     command.leftMotorDirection = true;
     command.rightMotorDirection = true;
-    switch(turn) {
+    switch(this->turn) {
       case -2: // we need to turn sharply left
         command.rightMotorSpeed = tightSpeed;
         command.leftMotorSpeed = tightSpeed;
@@ -107,7 +77,7 @@ private:
       case -1: // we need to turn left
         command.leftMotorDirection = false;
         command.rightMotorSpeed = turnSpeed;
-        command.leftMotorSpeed = turnSpeed/2;
+        command.leftMotorSpeed = turnSpeed/3;
         break;
       case -0: // we need to go straight
         command.rightMotorSpeed = forwardSpeed;
@@ -115,7 +85,7 @@ private:
         break;
       case 1: // we need to turn right
         command.rightMotorDirection = false;
-        command.rightMotorSpeed = turnSpeed/2;
+        command.rightMotorSpeed = turnSpeed/3;
         command.leftMotorSpeed = turnSpeed;
         break;
       case 2: // we need to turn sharply right
@@ -127,12 +97,101 @@ private:
         command.rightMotorSpeed = 0;
         command.leftMotorSpeed = 0;
     }
+
+    return command;
+  }
+
+  // This function gets called each tick when the line has been determined to be lost
+  ControlCommand search(bool leftReading, bool middleReading, bool rightReading, bool bottomReading) {
+    ControlCommand command;
+
+    if(!(middleReading || leftReading || rightReading)) {
+      switch(this->searchState) {
+        case 0:
+          this->searchTry = 1;
+          this->searchTimeMultiplier = 1;
+          this->searchState = 4;
+          this->searchTimer = millis();
+          break;
+
+        case 4:
+          if(millis() - searchTimer > 400) {
+            this->searchState = 1;
+            this->searchTimer = millis();
+            break;
+          }
+          command.leftMotorDirection = false;
+          command.rightMotorDirection = true;
+          command.leftMotorSpeed = 80;
+          command.rightMotorSpeed = 80;
+          break;
+
+        case 1:
+          if(millis() - searchTimer > 1000 * searchTimeMultiplier) {
+            this->searchState = 2;
+            this->searchTimer = millis();
+            break;
+          }
+          command.leftMotorDirection = true;
+          command.rightMotorDirection = true;
+          command.leftMotorSpeed = 80;
+          command.rightMotorSpeed = 80;
+          break;
+
+        case 2:
+          if(millis() - searchTimer > 1000 * searchTimeMultiplier) {
+            this->searchState = 3;
+            this->searchTimer = millis();
+            break;
+          }
+          command.leftMotorDirection = false;
+          command.rightMotorDirection = false;
+          command.leftMotorSpeed = 80;
+          command.rightMotorSpeed = 80;
+          break;
+        
+        case 3:
+          if(millis() - searchTimer > 200) {
+            if(this->searchTry >= 8) {
+              this->searchTimeMultiplier++;
+              this->searchTry = 1;
+            } else {
+              this->searchTry++;
+            }
+            this->searchState = 1;
+            this->searchTimer = millis();
+            break;
+          }
+          command.leftMotorDirection = false;
+          command.rightMotorDirection = true;
+          command.leftMotorSpeed = 80;
+          command.rightMotorSpeed = 80;
+          break;
+
+        default:
+          command.leftMotorDirection = false;
+          command.rightMotorDirection = true;
+          command.leftMotorSpeed = 255;
+          command.rightMotorSpeed = 255;
+      }
+    } else {
+      this->searching = false;
+      command.leftMotorSpeed = 0;
+      command.rightMotorSpeed = 0;
+    }
+
+    return command;
   }
 
   bool countingDown, searching;
-  unsigned int countdown;
   char turn;
-  unsigned long searchStartTime;
   static const unsigned char forwardSpeed = 80, turnSpeed = 90, tightSpeed = 90;
   LightSensor *rightSensor, *leftSensor, *middleSensor, *bottomSensor;
+
+  // Search-related member variables
+  unsigned int searchTimeMultiplier;
+  unsigned int searchTry;
+  unsigned char searchState;
+  unsigned long searchTimer;
+  unsigned long countdownStart;
 };
